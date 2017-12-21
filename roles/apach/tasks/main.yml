@@ -1,0 +1,28 @@
+---
+# tasks file for apach
+
+- name: install apache
+  yum:
+    name: httpd
+    state: latest
+  notify: restart httpd
+
+- name: Create sub-directory for index
+  file:
+    path: /var/www/html/ansible/
+    state: directory
+
+- name: Create index file
+  template:
+    src: index.html.j2
+    dest: /var/www/html/ansible/index.html
+  notify: restart httpd
+
+- name: start httpd
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - httpd
+

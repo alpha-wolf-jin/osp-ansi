@@ -1,0 +1,59 @@
+---
+# tasks file for provision_aws- file:
+- name: create script directories
+  file:
+    path: /tmp/aws/bin
+    state: directory
+    recurse: yes
+
+- name: Download common.sh
+  get_url:
+    url: http://www.opentlc.com/download/ansible_bootcamp/scripts/common.sh
+    dest: /tmp/aws/common.sh
+    mode: 0755
+
+- name: Download order_svc.sh
+  get_url:
+    url: http://www.opentlc.com/download/ansible_bootcamp/scripts/order_svc.sh
+    dest: /tmp/aws/order_svc.sh
+    mode: 0755
+
+- name: Download jq
+  get_url:
+    url: http://www.opentlc.com/download/ansible_bootcamp/scripts/jq-linux64
+    dest: /tmp/aws/bin/jq
+    mode: 0755
+
+- name: install python2-boto
+  yum:
+    name: python2-boto
+    state: present
+
+- name: Create credential.rc
+  template:
+    src: credential.rc.j2
+    dest: /tmp/aws/credential.rc
+
+- name: Mofify order_svc.sh to allow run credential.rc insise order script
+  lineinfile:
+    path: /tmp/aws/order_svc.sh
+    insertbefore: '\. \"\$\{ORIG\}\/common\.sh\"'
+    line: '. "${ORIG}/credential.rc"'
+  tags:
+  - insertOrder
+ 
+- name: Mofify order_svc.sh, it will not ask 'y/n' question.
+  replace:
+    path: /tmp/aws/order_svc.sh
+    regexp: '(\s+)echo (.*) yn$'
+    replace: '\1yn="y"'
+  tags:
+  - ans
+
+- name: run order_svc.sh 
+  shell: ./order_svc.sh -c 'OPENTLC Cloud Infrastructure Labs' -i 'Three Tier Application' -t 1
+  args:
+    chdir: /tmp/aws
+  register: order_result
+
+- debug: var=order_result

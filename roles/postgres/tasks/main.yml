@@ -1,0 +1,36 @@
+---
+# tasks file for postgres
+
+- name: install postgres
+  yum:
+    name: postgresql-server
+    state: latest
+  notify: restart postgresql
+
+- name: tell user to finish setting up postgres
+  debug:
+    msg: "Either uncomment the postgres setup or manually login and initialize"
+
+# once postgresql initialized, data dir will be created.
+# If it is there, no need initialization any more
+- name: postgresql data dir is there ?
+  stat:
+    path: /var/lib/pgsql/data/postgresql.conf
+  register: result
+
+- name: initilize postgres when postgresql data dir dose not exist
+  command:  postgresql-setup initdb
+  when: not result.stat.exists
+  notify: 
+  - restart postgresql
+#  - initialize file
+
+- name: start postgresql
+  service:
+    name: postgresql.service
+    state: started
+    enabled: yes
+  ignore_errors: yes
+
+
+

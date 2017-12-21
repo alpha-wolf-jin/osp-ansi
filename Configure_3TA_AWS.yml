@@ -1,0 +1,61 @@
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+
+  - name: build memoery inventory
+    add_host:
+      name: "{{item.name}}"
+      groups: "{{item.group}}"
+    with_items: 
+    - { name: "frontend1.{{ guid }}.example.opentlc.com", group: 'frontends' }
+    - { name: "app1.{{ guid }}.example.opentlc.com", group: 'apps' }
+    - { name: "app2.{{ guid }}.example.opentlc.com", group: 'apps' }
+    - { name: "appdb1.{{ guid }}.example.opentlc.com", group: 'appdbs' }
+
+- name: configuration
+  hosts: frontends,apps,appdbs
+  gather_facts: false 
+  become: true
+  roles:
+  # SOE build - set repo and diable Firewall
+  - role: soe
+
+  # Configure haproxy serivce
+  - role: haproxy
+    when: "inventory_hostname in groups['frontends']"
+
+  # Configure tomcat  serivce
+  - role: tomcat
+    when: "inventory_hostname in groups['apps']"
+
+  # Configure postgres  serivce
+  - role: postgres
+    when: "inventory_hostname in groups['appdbs']"
+
+  # Configure apach  serivce
+  - role: apach
+    when: "inventory_hostname in groups['apps']"
+
+  post_tasks:
+  - name: somke test, try 3 times 
+    uri:
+      url: http://{{ inventory_hostname }}
+      timeout: 180
+    retries: 3
+    delay: 15
+    until: "url_result.status == 200"
+    when: "inventory_hostname in groups['frontends']"
+    register: url_result
+  - debug: var=url_result
+
+- hosts: lcoalhost
+  become: false
+  gather_facts: false
+
+  tasks:
+  # if no sleep, next palybook likely fail at SCM part
+  - name: wait for git project to clean temp files
+    shell: sleep 20
+

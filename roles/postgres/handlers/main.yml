@@ -1,0 +1,15 @@
+---
+# handlers file for postgres
+
+- name: restart postgresql
+  service:
+    name: postgresql.service
+    state: restarted
+    enabled: yes
+  ignore_errors: yes
+
+- name: initialize file
+  file:
+    path: /etc/postgres-initilize
+    state: touch
+

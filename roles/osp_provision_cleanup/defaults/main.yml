@@ -1,0 +1,12 @@
+---
+# defaults file for osp_provision
+
+#flavor_name: m3.small
+#deployment: dev
+
+#servers:
+#- name: app1
+#  groups: apps
+#- name: app2
+#  groups: apps
+

@@ -1,0 +1,36 @@
+
+- name: Create a server instance "{{ serverinfo.name }}"
+  os_server:
+    state: "{{ ins_stat }}"
+    cloud: ospcloud
+    name: "{{ serverinfo.name }}"
+    image: rhel-guest-small
+    meta: "group={{ serverinfo.group }},deployment_name={{ deployment }}"
+    flavor: "{{ flavor_name }}"
+    security_groups: ICMP_and_SSH
+    key_name: ansible_ssh
+    nics:
+    - net-name: int_network
+    userdata: |
+      #!/bin/bash
+      curl -o /tmp/openstack.pub http://www.opentlc.com/download/ansible_bootcamp/openstack_keys/openstack.pub
+      cat /tmp/openstack.pub >> /home/cloud-user/.ssh/authorized_keys
+      curl -o /tmp/internal.repo http://www.opentlc.com/download/ansible_bootcamp/repo/internal.repo
+      cp /tmp/internal.repo /etc/yum.repos.d/internal.repo
+  register: webserverip
+
+- name: Add floating IP to "{{ serverinfo.name }}"
+  os_floating_ip:
+    cloud: ospcloud
+    state: "{{ ins_stat }}"
+    reuse: yes
+    server: "{{ serverinfo.name }}"
+    network: ext_network
+    wait: true
+    timeout: 180
+  register: webserverfloatingip
+
+- name: Show webserver public IP
+  debug: var=webserverfloatingip.floating_ip.floating_ip_address
+- name: Show webserver private IP
+  debug: var=webserverip.openstack.private_v4

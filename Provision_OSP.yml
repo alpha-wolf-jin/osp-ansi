@@ -1,0 +1,26 @@
+- hosts: jumpbox
+  gather_facts: false
+  vars:
+    ins_stat: present
+    flavor_name: m3.small
+    deployment: dev
+    servers:
+    - name: app1
+      group: apps
+    - name: app2
+      group: apps
+    - name: frontend1
+      group: frontends
+    - name: appdb1
+      group: appdbs
+  roles:
+  - role: osp_provision_cleanup
+
+- hosts: lcoalhost
+  become: false
+  gather_facts: false
+
+  tasks:
+  # if no sleep, next palybook likely fail at SCM part
+  - name: wait for git project to clean temp files
+    shell: sleep 20

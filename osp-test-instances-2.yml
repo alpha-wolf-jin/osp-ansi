@@ -1,0 +1,47 @@
+- hosts: jumpbox
+  gather_facts: false
+  tasks:
+
+  - name: Fetch Instance Info
+    os_server_facts:
+      cloud: ospcloud
+      region_name: RegionOne
+    register: result
+  - name: Add host to
+    add_host:
+      name: "{{ item.public_v4 }}"
+      group: "{{ item.metadata.group }}"
+    with_items: "{{result.ansible_facts.openstack_servers}}"
+  - name: Add host
+    add_host:
+      name: "{{ item.public_v4 }}"
+      group: "{{ item.metadata.deployment_name }}"
+    with_items: "{{result.ansible_facts.openstack_servers}}"
+
+
+  - name: wait for port 22 up within 300 sec
+    wait_for: 
+      timeout: 300
+      port: 22
+      host: "{{ item }}"
+      delay: 10
+    with_items:
+    - "{{ groups['frontends'] }}"
+    - "{{ groups['apps'] }}"
+    - "{{ groups['appdbs'] }}"
+
+- name: configuration
+  hosts: frontends,apps,appdbs
+  gather_facts: false 
+  become: true
+  roles:
+  - role: soe
+  - role: haproxy
+    when: "inventory_hostname in groups['frontends']"
+  - role: tomcat
+    when: "inventory_hostname in groups['apps']"
+  - role: postgres
+    when: "inventory_hostname in groups['appdbs']"
+  - role: apach
+    when: "inventory_hostname in groups['apps']"
+

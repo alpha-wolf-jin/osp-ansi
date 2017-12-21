@@ -1,0 +1,18 @@
+- hosts: jumpbox
+  gather_facts: false
+  vars:
+    ins_stat: absent
+    flavor_name: m3.small
+    deployment: dev
+    servers:
+    - name: app1
+      group: apps
+    - name: app2
+      group: apps
+    - name: frontend1
+      group: frontends
+    - name: appdb1
+      group: appdbs
+  roles:
+  - role: osp_provision_cleanup
+

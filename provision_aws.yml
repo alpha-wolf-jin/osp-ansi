@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+
+  roles:
+  - role: provision_aws
+
+- hosts: lcoalhost
+  become: false
+  gather_facts: false
+
+  tasks:
+  # if no sleep, next palybook likely fail at SCM part
+  - name: wait for git project to clean temp files
+    shell: sleep 20

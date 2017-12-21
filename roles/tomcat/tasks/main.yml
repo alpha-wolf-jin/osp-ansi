@@ -1,0 +1,44 @@
+---
+# tasks file for tomcat
+
+- name: install tomcat
+  yum:
+    name: tomcat
+    state: latest
+  notify: start tomcat
+
+#- shell: sed -i -i "s/8080/80/g" /etc/tomcat/server.xml
+
+
+- name: create ansible tomcat directory
+  file:
+    path: /usr/share/tomcat/webapps/ROOT
+    state: directory
+
+- name: copy static index.html to tomcat webapps/ansible/index.html
+  template:
+    src: index.html.j2
+    dest: /usr/share/tomcat/webapps/ROOT/index.html
+    mode: 0644
+  notify: start tomcat
+
+- name: create dir
+  file:
+    path: /usr/share/tomcat/webapps/ansible
+    state: directory
+    recurse: yes
+
+- name: copy static index.html to tomcat webapps/ansible/index.html
+  template:
+    src: index.html.j2
+    dest: /usr/share/tomcat/webapps/ansible/index.html
+  notify: start tomcat
+
+- name: start tomcat
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - tomcat
+#    - httpd

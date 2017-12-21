@@ -1,0 +1,38 @@
+- file:
+   path: /tmp/aws/bin
+      state: directory
+      recurse: yes
+  - get_url:
+      url: http://www.opentlc.com/download/ansible_bootcamp/scripts/common.sh
+      dest: /tmp/aws/common.sh
+      mode: 0755
+  - get_url:
+      url: http://www.opentlc.com/download/ansible_bootcamp/scripts/order_svc.sh
+      dest: /tmp/aws/order_svc.sh
+      mode: 0755
+  - get_url:
+      url: http://www.opentlc.com/download/ansible_bootcamp/scripts/jq-linux64
+      dest: /tmp/aws/bin/jq
+      mode: 0755
+  - yum:
+      name: python2-boto
+      state: latest
+
+  - lineinfile:
+      path: /tmp/aws/order_svc.sh.tmp
+      insertbefore: '\. \"\$\{ORIG\}\/common\.sh\"'
+      line: '. "${ORIG}/credential.rc"'
+    tags:
+    - insertOrder
+  
+  - replace:
+      path: /tmp/aws/order_svc.sh.tmp
+      regexp: '(\s+)echo (.*) yn$'
+      replace: '\1yn="y"'
+    tags:
+    - ans
+  - shell: order_svc.sh -c 'OPENTLC Cloud Infrastructure Labs' -i 'Three Tier Application' -t 1
+    args:
+      chdir: /tmp/aws
+    tags:
+    - comm

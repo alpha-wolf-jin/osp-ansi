@@ -1,0 +1,18 @@
+---
+# tasks file for osp_provision_cleanup
+
+#- debug: var="{{ item }}"
+#  with_items: 
+#  - "{{ servers }}"
+
+# provision osp instance
+- include: provision.yml serverinfo="{{ item }}"
+  when: "ins_stat == 'present'"
+  with_items: 
+  - "{{ servers }}"
+
+# delete osp instance
+- include: cleanup.yml serverinfo="{{ item }}"
+  when: "ins_stat == 'absent'"
+  with_items: 
+  - "{{ servers }}"

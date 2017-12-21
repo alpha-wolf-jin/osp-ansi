@@ -1,0 +1,18 @@
+- hosts: jumpbox
+  gather_facts: false
+  remote_user: root
+  tasks:
+  
+  - shell: ansible-playbook Configure_3TA_OSP.yml 2>/tmp/log
+    args: 
+      chdir: /root/playbooks/ansible/osp-ansi
+    async: 3600
+    poll: 0
+    register: osp_app_conf
+
+  - name: Check sync status
+    async_status: jid={{ osp_app_conf.ansible_job_id }}
+    register: job_result
+    until: job_result.finished
+    retries: 100
+    delay: 36
